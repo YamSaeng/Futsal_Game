@@ -1,0 +1,17 @@
+{
+  "name": "Futsal_Game",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/YamSaeng/Futsal_Game.git",
+  "author": "purebver <wkddj1541@gmail.com>",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@prisma/client": "^5.19.1",
+    "express": "^4.21.0",
+    "prisma": "^5.19.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
