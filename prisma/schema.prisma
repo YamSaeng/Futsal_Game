@@ -44,8 +44,8 @@ model GameRecord {
 model Ranking {
   rankingId Int @id @default(autoincrement()) @map("rankingId")
   userId Int @unique @map("userId")
-  rankingScore Int @map("rankingScore")
-  rank Int @map("rank")
+  rankingScore Int @default(1000) @map("rankingScore")
+  rank Int? @map("rank")
   win Int @default(0) @map("win")
   draw Int @default(0) @map("draw")
   defeat Int @default(0) @map("defeat")
@@ -59,9 +59,9 @@ model Ranking {
 model Squad {
   squadId Int @id @default(autoincrement()) @map("squadId")
   userId Int @unique @map("userId")
-  characterA Int @map("characterA")
-  characterB Int @map("characterB")
-  characterC Int @map("characterC")
+  characterA Int? @map("characterA")
+  characterB Int? @map("characterB")
+  characterC Int? @map("characterC")
 
   user Users @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
@@ -73,7 +73,7 @@ model Inventory {
   userId Int @map("userId")
   characterDBId Int @map("characterDBId")
   upgrade Int @map("upgrade")
-  equip Int @map("equip")
+  equip String? @map("equip")
 
   user Users @relation(fields: [userId], references: [userId], onDelete: Cascade)
   characterDB CharacterDB @relation(fields: [characterDBId], references: [characterDBId], onDelete: Cascade)
