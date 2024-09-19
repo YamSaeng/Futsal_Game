@@ -19,10 +19,11 @@ model Users {
   nickname String @map("nickname")
   id String @unique @map("id")
   password String @map("password")
+  cash Int @default(0) @map("cash")
   
   ranking Ranking?
   squad Squad?
-  inventoryCharacter InventoryCharacter []
+  inventory Inventory []
 
   @@map("Users")
 }
@@ -67,16 +68,17 @@ model Squad {
   @@map("Squad")
 }
 
-model InventoryCharacter {
-  inventoryCharacterId Int @id @default(autoincrement()) @map("inventoryCharacterId")
+model Inventory {
+  inventoryId Int @id @default(autoincrement()) @map("inventoryId")
   userId Int @map("userId")
   characterDBId Int @map("characterDBId")
   upgrade Int @map("upgrade")
+  equip Int @map("equip")
 
   user Users @relation(fields: [userId], references: [userId], onDelete: Cascade)
   characterDB CharacterDB @relation(fields: [characterDBId], references: [characterDBId], onDelete: Cascade)
 
-  @@map("InventoryCharacter")
+  @@map("Inventory")
 }
 
 model CharacterDB {
@@ -88,7 +90,7 @@ model CharacterDB {
   dribble Int @map("dribble")
   defence Int @map("defence")
 
-  inventoryCharacter InventoryCharacter []
+  inventory Inventory []
 
   @@map("CharacterDB")
 }
