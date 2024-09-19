@@ -5,6 +5,7 @@ import SquadRouter from "./routes/squad.router.js";
 import cookieParser from "cookie-parser";
 import UserRouter from "./routes/users.router.js";
 import characterRouter from "./routes/characters.router.js";
+import rankingRouter from "./routes/ranking.router.js";
 
 const app = express();
 const PORT = 3000;
@@ -18,6 +19,7 @@ app.use("/FutsalGame", [
   UpgradeRouter,
   GameStartRouter,
   SquadRouter,
+  rankingRouter
 ]);
 
 app.listen(PORT, () => {
