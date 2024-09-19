@@ -25,16 +25,31 @@ usersRouter.post('/Sign-Up', async (req, res, next) => {
 
     if (password !== confirmPassword) {
         return res.status(404).json({ message: `비밀번호와 비밀번호 확인이 일치하지 않습니다.` });
-    }
+    }    
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 유저 생성해서 Users table에 저장
     const user = await prisma.users.create({
         data: {
             name: name,
             nickname: nickname,
             id: id,
             password: hashedPassword
+        }
+    });   
+
+    // 랭킹 생성해서 Ranking table에 저장
+    const rank = await prisma.ranking.create({
+        data:{
+            userId : user.userId            
+        }
+    });
+
+    // 스쿼드 생성해서 Squad table에 저장
+    const squad = await prisma.squad.create({
+        data:{
+            userId : user.userId
         }
     });
 
