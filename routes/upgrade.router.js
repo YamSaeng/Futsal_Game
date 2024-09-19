@@ -1,7 +1,7 @@
 import express from "express";
 //import authMiddleware from "../middlewares/auth.middleware";
 import { prisma } from "../utils/prisma/prismaClient.js";
-import { executeTransaction } from "../utils/executeTransaction.js";
+import { executeTransaction } from "../utils/transaction/executeTransaction.js";
 
 const router = express.Router();
 
