@@ -101,12 +101,10 @@ usersRouter.post('/Sign-In', async (req, res, next) => {
     // JWT로 AccessToken 생성
     const s2cAccessToken = CreateAccessToken(id);
     // JWT로 RefreshToken 생성
-    const s2cRefreshToken = CreateRefreshToken(id);
-    
-    res.cookie('accessToken', s2cAccessToken);
+    const s2cRefreshToken = CreateRefreshToken(id);     
 
     // 응답 헤더에 accessToken 기록
-    //res.header("authorization", s2cAccessTokens);
+    res.header("authorization", s2cAccessToken);
 
     return res.status(200).json({ message: `${id}로 로그인에 성공했습니다.`});
 })
