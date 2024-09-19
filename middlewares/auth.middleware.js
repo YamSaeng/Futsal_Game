@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { prisma } from '../src/utils/prisma/prismaClient.js'
-import { ValidateToken } from '../src/routes/users.router.js'
+import { prisma } from "../utils/prisma/prismaClient.js";
+import { ValidateToken } from "../utils/token/tokenCreate.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -10,7 +10,7 @@ export default async function (req, res, next) {
 
     // if (authorization === undefined) {
     //     return res.status(404).json({ message: 'not authorization found' });
-    // }
+    // }    
 
     const c2sAccessToken = req.cookies.accessToken;
     if (c2sAccessToken === undefined) {
