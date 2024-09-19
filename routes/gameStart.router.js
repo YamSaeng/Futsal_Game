@@ -1,6 +1,6 @@
 import express from "express";
 import { prisma } from "../utils/prisma/prismaClient.js";
-import { executeTransaction } from "../utils/executeTransaction.js";
+import { executeTransaction } from "../utils/transaction/executeTransaction.js";
 
 const router = express.Router();
 
@@ -233,6 +233,7 @@ router.post("/:target/Play", async (req, res, next) => {
         logs,
       },
     });
+    return create;
   };
   await executeTransaction(finish);
 
