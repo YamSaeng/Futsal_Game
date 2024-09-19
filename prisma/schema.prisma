@@ -24,6 +24,7 @@ model Users {
   ranking Ranking?
   squad Squad?
   inventory Inventory []
+  refreshTokens RefreshTokens?
 
   @@map("Users")
 }
@@ -106,4 +107,16 @@ model UpgradeDB {
   defence Int @map("defence")
 
   @@map("UpgradeDB")
+}
+
+model RefreshTokens{
+	tokenId Int	@id	@default(autoincrement()) @map("tokenId")
+	id String @unique @map("id")
+	token String @map("token")	
+  createdAt DateTime @default(now()) @map("createdAt")
+  expiredAt DateTime @map("expiredAt")
+	
+	users Users @relation(fields:[id], references:[id], onDelete: Cascade)
+
+	@@map("RefreshTokens")
 }
