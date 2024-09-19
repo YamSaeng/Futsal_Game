@@ -2,12 +2,13 @@ import express from 'express';
 import { prisma } from '../utils/prisma/prismaClient.js'
 import { CreateAccessToken } from '../utils/token/tokenCreate.js'
 import { CreateRefreshToken } from '../utils/token/tokenCreate.js'
+import bcrypt from 'bcrypt';
 
 const usersRouter = express.Router();
 
 // 회원가입
 usersRouter.post('/Sign-Up', async (req, res, next) => {
-    const { id, password, confirmPassword } = req.body;
+    const { name, nickname, id, password, confirmPassword } = req.body;
     const isExistUser = await prisma.users.findFirst({
         where: {
             id: id
@@ -25,6 +26,17 @@ usersRouter.post('/Sign-Up', async (req, res, next) => {
     if (password !== confirmPassword) {
         return res.status(404).json({ message: `비밀번호와 비밀번호 확인이 일치하지 않습니다.` });
     }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await prisma.users.create({
+        data: {
+            name: name,
+            nickname: nickname,
+            id: id,
+            password: hashedPassword
+        }
+    });
 
     return res
         .status(201)
@@ -48,7 +60,7 @@ usersRouter.post('/Sign-Up', async (req, res, next) => {
 //    다시 로그인하면 새로 생성된 Refresh Token을 DB에 저장한다.
 
 // 로그인
-usersRouter.post('/Sign-in', async (req, res, next) => {
+usersRouter.post('/Sign-In', async (req, res, next) => {
     // 아이디, 비밀번호 가져오기
     const { id, password } = req.body;
 
@@ -62,8 +74,8 @@ usersRouter.post('/Sign-in', async (req, res, next) => {
     // 아이디 검사
     if (!user) {
         return res.status(404).json({ message: `${id}은 존재하지 않는 아이디 입니다.` });
-    }
-
+    }    
+    
     // 비밀번호 검사
     if (!(await bcrypt.compare(password, user.password))) {
         return res.status(404).json({ message: `비밀번호가 일치하지 않습니다.` });
@@ -72,17 +84,16 @@ usersRouter.post('/Sign-in', async (req, res, next) => {
     const auth = req.headers.authorization;
 
     // JWT로 AccessToken 생성
-    const s2cAccessTokens = CreateAccessToken(id);
+    const s2cAccessToken = CreateAccessToken(id);
     // JWT로 RefreshToken 생성
     const s2cRefreshToken = CreateRefreshToken(id);
+    
+    res.cookie('accessToken', s2cAccessToken);
 
     // 응답 헤더에 accessToken 기록
-    res.header("authorization", s2cAccessTokens);
+    //res.header("authorization", s2cAccessTokens);
 
-    return res.status(200).json({
-        message: `${id}로 로그인에 성공했습니다.`,
-        token: accessToken
-    });
+    return res.status(200).json({ message: `${id}로 로그인에 성공했습니다.`});
 })
 
 export default usersRouter;
