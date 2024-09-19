@@ -104,7 +104,7 @@ usersRouter.post('/Sign-In', async (req, res, next) => {
     const s2cRefreshToken = CreateRefreshToken(id);     
 
     // 응답 헤더에 accessToken 기록
-    res.header("authorization", s2cAccessTokens);
+    res.header("authorization", s2cAccessToken);
 
     return res.status(200).json({ message: `${id}로 로그인에 성공했습니다.`});
 })
