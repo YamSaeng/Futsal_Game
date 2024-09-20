@@ -7,7 +7,7 @@ export function CreateAccessToken(id) {
     const accessToken = jwt.sign(
         { id: id },
         process.env.ACCESS_TOKEN_SECRET_KEY,
-        { expiresIn: '600s' }
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_TIME }
     );
 
     return process.env.TOKEN_TYPE + accessToken;
@@ -17,7 +17,7 @@ export function CreateRefreshToken(id) {
     const refreshToken = jwt.sign(
         { id: id },
         process.env.REFRESH_TOKEN_SECRET_KEY,
-        { expiresIn: '7d' },
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_TIME },
     );
 
     return process.env.TOKEN_TYPE + refreshToken;
