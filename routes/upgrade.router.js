@@ -16,6 +16,11 @@ router.patch(
         inventoryId: +inventoryId,
       },
     });
+    if (!inventory) {
+      return res.status(404).json({
+        errormessage: '존재하지 않는 인벤토리id입니다.',
+      });
+    }
     if (inventory.userId !== userId) {
       return res.status(400).json({
         errormessage: '접근한 인벤토리 id와 토큰id가 일치하지 않습니다.',
