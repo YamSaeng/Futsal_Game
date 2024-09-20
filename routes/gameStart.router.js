@@ -5,7 +5,7 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/:target/Play', authMiddleware, async (req, res, next) => {
+router.post('/Play/:target', authMiddleware, async (req, res, next) => {
   const { target } = req.params;
   const targetId = +target;
   const userId = req.user.userId;
@@ -17,6 +17,12 @@ router.post('/:target/Play', authMiddleware, async (req, res, next) => {
   const targetUser = await prisma.users.findFirst({
     where: { userId: targetId },
   });
+
+  if (!targetUser) {
+    return res
+      .status(404)
+      .json({ errormessage: '존재하지 않는 유저id입니다.' });
+  }
 
   //스쿼드 검색
   const squad = await prisma.squad.findFirst({
@@ -33,6 +39,9 @@ router.post('/:target/Play', authMiddleware, async (req, res, next) => {
 
     await Promise.all(
       members.map(async (val) => {
+        if (squad[val] === null) {
+          return null;
+        }
         const inventoryId = squad[val];
 
         const inventory = await prisma.inventory.findFirst({
@@ -93,30 +102,33 @@ router.post('/:target/Play', authMiddleware, async (req, res, next) => {
     return status;
   }
 
-  //user 스쿼드
-  const userMembers = Object.keys(squad).filter((key) =>
+  //character ABC
+  const members = Object.keys(squad).filter((key) =>
     key.startsWith('character')
   );
 
-  const userCharacters = await getCharacter(userMembers, squad, userId);
-  const userStatus = characterStatus(userMembers, userCharacters);
+  //user 스쿼드
+  const userCharacters = await getCharacter(members, squad, userId);
+  if (Object.keys(userCharacters).length === 0) {
+    return res.status(404).json({
+      errormessage: '당신의 스쿼드에 빈자리가 있어 경기를 취소합니다.',
+    });
+  }
+  const userStatus = characterStatus(members, userCharacters);
 
   //target 스쿼드
-  const targetMembers = Object.keys(target_squad).filter((key) =>
-    key.startsWith('character')
-  );
-  const targetCharacters = await getCharacter(
-    targetMembers,
-    target_squad,
-    targetId
-  );
-  const targetStatus = characterStatus(targetMembers, targetCharacters);
+  const targetCharacters = await getCharacter(members, target_squad, targetId);
+  if (Object.keys(targetCharacters).length === 0) {
+    return res.status(404).json({
+      errormessage: '상대의 스쿼드에 빈자리가 있어 경기를 취소합니다.',
+    });
+  }
+  const targetStatus = characterStatus(members, targetCharacters);
 
   //골 찬스를 받을 선수 데이터[이름, 슛]
   const chanceCharacter = (characters, SpeedSum, length) => {
     let random = Math.random();
     for (let i = 0; i < length; i++) {
-      console.log(characters);
       const speed = characters.speed[i];
       if (random <= speed / SpeedSum) {
         return [characters.name[i], characters.shoot[i]];
@@ -161,10 +173,7 @@ router.post('/:target/Play', authMiddleware, async (req, res, next) => {
     if (Math.random() <= userChance / (userChance + targetChance)) {
       //userChance
       const chance = chanceCharacter(userStatus, userSpeedSum, length);
-      logs.push(
-        `${minute}분 ${second}초 ${user.nickname}팀 ${chance[0]}선수 달려갑니다!`
-      );
-      //logs.push([분, 초, 유저닉네임(팀), 캐릭터, 골성공유무, 유저점수, 타겟점수])
+
       if (Math.random() < chance[1] / (chance[1] + targetDefence)) {
         //골 성공
         userScore++;
@@ -180,9 +189,7 @@ router.post('/:target/Play', authMiddleware, async (req, res, next) => {
     } else {
       //targetChance
       const chance = chanceCharacter(targetStatus, targetSpeedSum, length);
-      logs.push(
-        `${minute}분 ${second}초 ${targetUser.nickname}팀 ${chance[0]}선수 달려갑니다!`
-      );
+
       if (Math.random() < chance[1] / (chance[1] + userDefence)) {
         //골 성공
         targetScore++;
@@ -199,7 +206,7 @@ router.post('/:target/Play', authMiddleware, async (req, res, next) => {
 
     //무승부 처리
     if (time >= 45 && userScore === targetScore) {
-      logs.push(`총 시간 ${minute}분 ${second}초 무승부로 끝이 납니다.`);
+      logs.push(`총 경기시간 ${minute}분 ${second}초 무승부로 끝이 납니다.`);
       result = 'draw';
       break;
     }
@@ -207,13 +214,13 @@ router.post('/:target/Play', authMiddleware, async (req, res, next) => {
     if (time >= 40 && userScore !== targetScore) {
       if (userScore > targetScore) {
         logs.push(
-          `총 시간 ${minute}분 ${second}초 ${user.nickname}팀의 승리입니다.`
+          `총 경기시간 ${minute}분 ${second}초 ${user.nickname}팀의 승리입니다.`
         );
         result = 'win';
         break;
       } else {
         logs.push(
-          `총 시간 ${minute}분 ${second}초 ${user.nickname}팀의 패배입니다.`
+          `총 경기시간 ${minute}분 ${second}초 ${user.nickname}팀의 패배입니다.`
         );
         result = 'defeat';
         break;
@@ -241,7 +248,7 @@ router.post('/:target/Play', authMiddleware, async (req, res, next) => {
 });
 
 //레이팅 게임-----------------------------------------------------------------------------------------------------------------
-router.get('/Rating/Play', authMiddleware, async (req, res, next) => {
+router.post('/Rating/Play', authMiddleware, async (req, res, next) => {
   //유저 검색
   const userId = req.user.userId;
   const user = await prisma.users.findFirst({
@@ -295,11 +302,12 @@ router.get('/Rating/Play', authMiddleware, async (req, res, next) => {
   });
   const targetRankingScore = targetRank.rankingScore;
 
-  //스쿼드 검색
+  //유저 스쿼드 검색
   const squad = await prisma.squad.findFirst({
     where: { userId },
   });
 
+  //상대 스쿼드 검색
   const target_squad = await prisma.squad.findFirst({
     where: { userId: targetId },
   });
@@ -310,43 +318,56 @@ router.get('/Rating/Play', authMiddleware, async (req, res, next) => {
 
     await Promise.all(
       members.map(async (val) => {
-        const inventoryId = squad[val];
+        //만약 스쿼드에 선수가 없을경우 예비선수를 장착
+        if (squad[val] === null) {
+          const character = {
+            name: '예비 선수',
+            shoot: 40,
+            speed: 40,
+            pass: 40,
+            dribble: 40,
+            defence: 40,
+          };
+          characters[val] = character;
+        } else {
+          const inventoryId = squad[val];
 
-        const inventory = await prisma.inventory.findFirst({
-          where: { inventoryId },
-        });
+          const inventory = await prisma.inventory.findFirst({
+            where: { inventoryId },
+          });
 
-        const character = await prisma.characterDB.findFirst({
-          where: {
-            characterDBId: inventory.characterDBId,
-          },
-          select: {
-            name: true,
-            shoot: true,
-            speed: true,
-            pass: true,
-            dribble: true,
-            defence: true,
-          },
-        });
+          const character = await prisma.characterDB.findFirst({
+            where: {
+              characterDBId: inventory.characterDBId,
+            },
+            select: {
+              name: true,
+              shoot: true,
+              speed: true,
+              pass: true,
+              dribble: true,
+              defence: true,
+            },
+          });
 
-        const upgrade = await prisma.upgradeDB.findFirst({
-          where: {
-            upgrade: inventory.upgrade,
-          },
-        });
+          const upgrade = await prisma.upgradeDB.findFirst({
+            where: {
+              upgrade: inventory.upgrade,
+            },
+          });
 
-        const data = {
-          ...character,
-        };
+          const data = {
+            ...character,
+          };
 
-        for (let key in data) {
-          if (upgrade[key]) {
-            data[key] = data[key] * (upgrade[key] / 100);
+          for (let key in data) {
+            if (upgrade[key]) {
+              data[key] = data[key] * (upgrade[key] / 100);
+            }
           }
-        }
 
-        characters[val] = data;
+          characters[val] = data;
+        }
       })
     );
 
@@ -370,23 +391,18 @@ router.get('/Rating/Play', authMiddleware, async (req, res, next) => {
     return status;
   }
 
-  //user 스쿼드
-  const userMembers = Object.keys(squad).filter((key) =>
+  //character ABC
+  const members = Object.keys(squad).filter((key) =>
     key.startsWith('character')
   );
-  const userCharacters = await getCharacter(userMembers, squad, userId);
-  const userStatus = characterStatus(userMembers, userCharacters);
+
+  //user 스쿼드
+  const userCharacters = await getCharacter(members, squad, userId);
+  const userStatus = characterStatus(members, userCharacters);
 
   //target 스쿼드
-  const targetMembers = Object.keys(target_squad).filter((key) =>
-    key.startsWith('character')
-  );
-  const targetCharacters = await getCharacter(
-    targetMembers,
-    target_squad,
-    targetId
-  );
-  const targetStatus = characterStatus(targetMembers, targetCharacters);
+  const targetCharacters = await getCharacter(members, target_squad, targetId);
+  const targetStatus = characterStatus(members, targetCharacters);
 
   //골 찬스를 받을 선수 데이터[이름, 슛]
   const chanceCharacter = (characters, SpeedSum, length) => {
@@ -441,10 +457,7 @@ router.get('/Rating/Play', authMiddleware, async (req, res, next) => {
     if (Math.random() <= userChance / (userChance + targetChance)) {
       //userChance
       const chance = chanceCharacter(userStatus, userSpeedSum, length);
-      logs.push(
-        `${minute}분 ${second}초 ${user.nickname}팀 ${chance[0]}선수 달려갑니다!`
-      );
-      //logs.push([분, 초, 유저닉네임(팀), 캐릭터, 골성공유무, 유저점수, 타겟점수])
+
       if (Math.random() < chance[1] / (chance[1] + targetDefence)) {
         //골 성공
         userScore++;
@@ -460,9 +473,7 @@ router.get('/Rating/Play', authMiddleware, async (req, res, next) => {
     } else {
       //targetChance
       const chance = chanceCharacter(targetStatus, targetSpeedSum, length);
-      logs.push(
-        `${minute}분 ${second}초 ${targetUser.nickname}팀 ${chance[0]}선수 달려갑니다!`
-      );
+
       if (Math.random() < chance[1] / (chance[1] + userDefence)) {
         //골 성공
         targetScore++;
@@ -479,7 +490,7 @@ router.get('/Rating/Play', authMiddleware, async (req, res, next) => {
 
     //무승부 처리
     if (time >= 45 && userScore === targetScore) {
-      logs.push(`총 시간 ${minute}분 ${second}초 무승부로 끝이 납니다.`);
+      logs.push(`총 경기시간 ${minute}분 ${second}초 무승부로 끝이 납니다.`);
       result = 'draw';
       newRankingScore = Math.floor(userRankingScore + 25 * (0.5 - userOdds));
       break;
@@ -488,14 +499,14 @@ router.get('/Rating/Play', authMiddleware, async (req, res, next) => {
     if (time >= 40 && userScore !== targetScore) {
       if (userScore > targetScore) {
         logs.push(
-          `총 시간 ${minute}분 ${second}초 ${user.nickname}팀의 승리입니다.`
+          `총 경기시간 ${minute}분 ${second}초 ${user.nickname}팀의 승리입니다.`
         );
         result = 'win';
         newRankingScore = Math.floor(userRankingScore + 50 * (1 - userOdds));
         break;
       } else {
         logs.push(
-          `총 시간 ${minute}분 ${second}초 ${user.nickname}팀의 패배입니다.`
+          `총 경기시간 ${minute}분 ${second}초 ${user.nickname}팀의 패배입니다.`
         );
         result = 'defeat';
         newRankingScore = Math.floor(userRankingScore + 50 * (0 - userOdds));
