@@ -5,12 +5,15 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
+//스쿼드 인앤아웃
 router.post('/Squad/:inventoryId', authMiddleware, async (req, res, next) => {
   const userId = req.user.userId;
   const { inventoryId } = req.params;
   const inventory = await prisma.inventory.findFirst({
     where: { inventoryId: +inventoryId },
   });
+
+  //유효성체크
   if (!inventory) {
     return res.status(404).json({
       errormessage: '존재하지 않는 인벤토리id입니다.',
@@ -21,6 +24,7 @@ router.post('/Squad/:inventoryId', authMiddleware, async (req, res, next) => {
       errormessage: '인증된 ID와 Inventory 사용자가 일치하지 않습니다.',
     });
   }
+
   const characterDB = await prisma.characterDB.findFirst({
     where: { characterDBId: inventory.characterDBId },
   });
@@ -51,6 +55,7 @@ router.post('/Squad/:inventoryId', authMiddleware, async (req, res, next) => {
       .json({ message: `${characterDB.name}이 스쿼드에서 제외 되었습니다.` });
   }
 
+  //빈자리 찾기
   let location;
   if (squad.characterA === null) {
     location = 'characterA';
@@ -66,6 +71,8 @@ router.post('/Squad/:inventoryId', authMiddleware, async (req, res, next) => {
       .status(404)
       .json({ errormessage: '스쿼드에 빈 자리가 없습니다' });
   }
+
+  //선발
   const result = async (tx) => {
     const squadIn = await tx.squad.update({
       where: { squadId: squad.squadId },
@@ -86,20 +93,28 @@ router.post('/Squad/:inventoryId', authMiddleware, async (req, res, next) => {
     .json({ message: `${characterDB.name}이 스쿼드에 추가 되었습니다.` });
 });
 
+//스쿼드 올아웃
 router.patch('/Squad/All-Out', authMiddleware, async (req, res, next) => {
   const userId = req.user.userId;
   const squad = await prisma.squad.findFirst({
     where: { userId },
   });
-  const inventoryA = await prisma.inventory.findFirst({
-    where: { inventoryId: squad.characterA },
+
+  const members = Object.keys(squad).filter((key) =>
+    key.startsWith('character')
+  );
+
+  //스쿼드가 참조한 인벤토리 불러오기
+  const inventoryIds = [];
+  for (let i = 0; i < members.length; i++) {
+    if (squad[members[i]]) {
+      inventoryIds.push(squad[members[i]]);
+    }
+  }
+  const inventorys = await prisma.inventory.findMany({
+    where: { inventoryId: { in: inventoryIds } },
   });
-  const inventoryB = await prisma.inventory.findFirst({
-    where: { inventoryId: squad.characterB },
-  });
-  const inventoryC = await prisma.inventory.findFirst({
-    where: { inventoryId: squad.characterC },
-  });
+
   const result = async (tx) => {
     const squadUpdate = await tx.squad.update({
       where: { userId },
@@ -109,24 +124,14 @@ router.patch('/Squad/All-Out', authMiddleware, async (req, res, next) => {
         characterC: null,
       },
     });
-    const inventoryUpdateA = await tx.inventory.update({
-      where: { inventoryId: inventoryA.inventoryId },
-      data: {
-        equip: null,
-      },
-    });
-    const inventoryUpdateB = await tx.inventory.update({
-      where: { inventoryId: inventoryB.inventoryId },
-      data: {
-        equip: null,
-      },
-    });
-    const inventoryUpdateC = await tx.inventory.update({
-      where: { inventoryId: inventoryC.inventoryId },
-      data: {
-        equip: null,
-      },
-    });
+    for (let i = 0; i < inventorys.length; i++) {
+      await tx.inventory.update({
+        where: { inventoryId: inventorys[i].inventoryId },
+        data: {
+          equip: null,
+        },
+      });
+    }
   };
   executeTransaction(result);
 
@@ -156,7 +161,7 @@ router.get('/Squad/Check', authMiddleware, async (req, res, next) => {
     });
     for (let key in character) {
       if (upgrade[key]) {
-        character[key] = character[key] * (upgrade[key] / 100);
+        character[key] = Math.floor(character[key] * (upgrade[key] / 100));
       }
     }
     return character;
@@ -165,6 +170,7 @@ router.get('/Squad/Check', authMiddleware, async (req, res, next) => {
   //스쿼드에 저장된 캐릭터 불러오기
   let inventoryA;
   let characterA;
+  //스쿼드 null 체크
   if (squad.characterA !== null) {
     inventoryA = await prisma.inventory.findFirst({
       where: { inventoryId: squad.characterA },
@@ -178,7 +184,7 @@ router.get('/Squad/Check', authMiddleware, async (req, res, next) => {
   //반복
   let inventoryB;
   let characterB;
-  if (squad.characterA !== null) {
+  if (squad.characterB !== null) {
     inventoryB = await prisma.inventory.findFirst({
       where: { inventoryId: squad.characterB },
     });
@@ -189,7 +195,7 @@ router.get('/Squad/Check', authMiddleware, async (req, res, next) => {
 
   let inventoryC;
   let characterC;
-  if (squad.characterA !== null) {
+  if (squad.characterC !== null) {
     inventoryC = await prisma.inventory.findFirst({
       where: { inventoryId: squad.characterC },
     });
@@ -238,7 +244,7 @@ router.get('/Squad/Check/:userId', async (req, res, next) => {
     });
     for (let key in character) {
       if (upgrade[key]) {
-        character[key] = character[key] * (upgrade[key] / 100);
+        character[key] = Math.floor(character[key] * (upgrade[key] / 100));
       }
     }
     return character;
@@ -257,7 +263,7 @@ router.get('/Squad/Check/:userId', async (req, res, next) => {
 
   let inventoryB;
   let characterB;
-  if (squad.characterA !== null) {
+  if (squad.characterB !== null) {
     inventoryB = await prisma.inventory.findFirst({
       where: { inventoryId: squad.characterB },
     });
@@ -268,7 +274,7 @@ router.get('/Squad/Check/:userId', async (req, res, next) => {
 
   let inventoryC;
   let characterC;
-  if (squad.characterA !== null) {
+  if (squad.characterC !== null) {
     inventoryC = await prisma.inventory.findFirst({
       where: { inventoryId: squad.characterC },
     });

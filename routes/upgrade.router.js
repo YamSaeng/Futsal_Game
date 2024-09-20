@@ -2,6 +2,9 @@ import express from 'express';
 import { prisma } from '../utils/prisma/prismaClient.js';
 import { executeTransaction } from '../utils/transaction/executeTransaction.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const router = express.Router();
 
@@ -26,7 +29,7 @@ router.patch(
         errormessage: '접근한 인벤토리 id와 토큰id가 일치하지 않습니다.',
       });
     }
-    if (inventory.upgrade === 10) {
+    if (inventory.upgrade === parseInt(process.env.MAX_CARD_VALUE)) {
       return res
         .status(200)
         .json({ message: '이미 최대로 강화된 선수입니다.' });
