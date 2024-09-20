@@ -113,7 +113,7 @@ model RefreshTokens{
 	tokenId Int	@id	@default(autoincrement()) @map("tokenId")
 	id String @unique @map("id")
 	token String @map("token")	
-  createdAt DateTime @default(now()) @map("createdAt")
+  createdAt DateTime @map("createdAt")
   expiredAt DateTime @map("expiredAt")
 	
 	users Users @relation(fields:[id], references:[id], onDelete: Cascade)
