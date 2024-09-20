@@ -31,11 +31,11 @@ model Users {
 
 model GameRecord {
   gameRecordId Int @id @default(autoincrement()) @map("gameRecordId")
-  nameA Int @map("nameA")
-  nameB Int @map("nameB")
+  userA Int @map("userA")
+  userB Int @map("userB")
   score String @map("score")
   result String @map("result")
-  logs String @map("logs")
+  logs Json @map("logs")
   createdAt DateTime @default(now()) @map("createdAt")
   updatedAt DateTime @updatedAt @map("updatedAt")
 
@@ -73,7 +73,7 @@ model Inventory {
   inventoryId Int @id @default(autoincrement()) @map("inventoryId")
   userId Int @map("userId")
   characterDBId Int @map("characterDBId")
-  upgrade Int @map("upgrade")
+  upgrade Int @default(0) @map("upgrade")
   equip String? @map("equip")
 
   user Users @relation(fields: [userId], references: [userId], onDelete: Cascade)
@@ -99,7 +99,7 @@ model CharacterDB {
 model UpgradeDB {
   upgradeDBId Int @id @default(autoincrement()) @map("upgradeDBId")
   upgrade Int @map("upgrade")
-  probablity Int @map("probablity")
+  probability Int @map("probability")
   shoot Int @map("shoot")
   speed Int @map("speed")
   pass Int @map("pass")

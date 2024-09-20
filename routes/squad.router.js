@@ -14,6 +14,9 @@ router.post('/Squad/:inventoryId', authMiddleware, async (req, res, next) => {
   const character = await prisma.inventory.findFirst({
     where: { characterDBId: inventory.characterDBId },
   });
+  const characterDB = await prisma.characterDB.findFirst({
+    where: { characterDBId: inventory.characterDBId },
+  });
   if (inventory.userId !== userId) {
     return res.status(400).json({
       errormessage: '인증된 ID와 Inventory 사용자가 일치하지 않습니다.',
@@ -43,7 +46,7 @@ router.post('/Squad/:inventoryId', authMiddleware, async (req, res, next) => {
     executeTransaction(result);
     return res
       .status(201)
-      .json({ message: `${character.name}이 스쿼드에서 제외 되었습니다.` });
+      .json({ message: `${characterDB.name}이 스쿼드에서 제외 되었습니다.` });
   }
 
   let location;
@@ -78,7 +81,7 @@ router.post('/Squad/:inventoryId', authMiddleware, async (req, res, next) => {
   executeTransaction(result);
   return res
     .status(201)
-    .json({ message: `${character.name}이 스쿼드에 추가 되었습니다.` });
+    .json({ message: `${characterDB.name}이 스쿼드에 추가 되었습니다.` });
 });
 
 router.patch('/Squad/All-Out', authMiddleware, async (req, res, next) => {
@@ -106,7 +109,7 @@ router.patch('/Squad/All-Out', authMiddleware, async (req, res, next) => {
   });
   const result = async (tx) => {
     const squadUpdate = await tx.squad.update({
-      where: { uasrId },
+      where: { userId },
       data: {
         characterA: null,
         characterB: null,
@@ -137,7 +140,7 @@ router.patch('/Squad/All-Out', authMiddleware, async (req, res, next) => {
   return res.status(200).json({ message: '스쿼드를 해제 하였습니다.' });
 });
 
-router.patch('/Squad/Check', authMiddleware, async (req, res, next) => {
+router.get('/Squad/Check', authMiddleware, async (req, res, next) => {
   //authMiddleware에서 인증한 유저 아이디 가져오기
   const userId = req.user.userId;
 

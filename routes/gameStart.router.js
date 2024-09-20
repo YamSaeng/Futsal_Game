@@ -1,11 +1,11 @@
-import express from "express";
-import { prisma } from "../utils/prisma/prismaClient.js";
-import { executeTransaction } from "../utils/transaction/executeTransaction.js";
+import express from 'express';
+import { prisma } from '../utils/prisma/prismaClient.js';
+import { executeTransaction } from '../utils/transaction/executeTransaction.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-//인증미들웨어 포함안된상태 나중에 넣을 예정
-router.post("/:target/Play", async (req, res, next) => {
+router.post('/:target/Play', authMiddleware, async (req, res, next) => {
   const { target } = req.params;
   const targetId = +target;
   const userId = req.user.userId;
@@ -33,18 +33,15 @@ router.post("/:target/Play", async (req, res, next) => {
 
     await Promise.all(
       members.map(async (val) => {
-        const characterDBId = squad[val];
+        const inventoryId = squad[val];
 
-        const inventory = await prisma.inventoryCharacter.findFirst({
-          where: {
-            userId,
-            characterDBId,
-          },
+        const inventory = await prisma.inventory.findFirst({
+          where: { inventoryId },
         });
 
         const character = await prisma.characterDB.findFirst({
           where: {
-            characterDBId,
+            characterDBId: inventory.characterDBId,
           },
           select: {
             name: true,
@@ -98,14 +95,15 @@ router.post("/:target/Play", async (req, res, next) => {
 
   //user 스쿼드
   const userMembers = Object.keys(squad).filter((key) =>
-    key.startsWith("character")
+    key.startsWith('character')
   );
+
   const userCharacters = await getCharacter(userMembers, squad, userId);
   const userStatus = characterStatus(userMembers, userCharacters);
 
   //target 스쿼드
   const targetMembers = Object.keys(target_squad).filter((key) =>
-    key.startsWith("character")
+    key.startsWith('character')
   );
   const targetCharacters = await getCharacter(
     targetMembers,
@@ -118,6 +116,7 @@ router.post("/:target/Play", async (req, res, next) => {
   const chanceCharacter = (characters, SpeedSum, length) => {
     let random = Math.random();
     for (let i = 0; i < length; i++) {
+      console.log(characters);
       const speed = characters.speed[i];
       if (random <= speed / SpeedSum) {
         return [characters.name[i], characters.shoot[i]];
@@ -147,7 +146,7 @@ router.post("/:target/Play", async (req, res, next) => {
   let time = 0;
   let userScore = 0;
   let targetScore = 0;
-  let result = "";
+  let result = '';
   const logs = [];
 
   //경기 시작
@@ -161,7 +160,7 @@ router.post("/:target/Play", async (req, res, next) => {
     //확률 골 찬스
     if (Math.random() <= userChance / (userChance + targetChance)) {
       //userChance
-      const chance = chanceCharacter(userCharacters, userSpeedSum, length);
+      const chance = chanceCharacter(userStatus, userSpeedSum, length);
       logs.push(
         `${minute}분 ${second}초 ${user.nickname}팀 ${chance[0]}선수 달려갑니다!`
       );
@@ -180,7 +179,7 @@ router.post("/:target/Play", async (req, res, next) => {
       }
     } else {
       //targetChance
-      const chance = chanceCharacter(targetCharacters, targetSpeedSum, length);
+      const chance = chanceCharacter(targetStatus, targetSpeedSum, length);
       logs.push(
         `${minute}분 ${second}초 ${targetUser.nickname}팀 ${chance[0]}선수 달려갑니다!`
       );
@@ -201,7 +200,7 @@ router.post("/:target/Play", async (req, res, next) => {
     //무승부 처리
     if (time >= 45 && userScore === targetScore) {
       logs.push(`총 시간 ${minute}분 ${second}초 무승부로 끝이 납니다.`);
-      result = "draw";
+      result = 'draw';
       break;
     }
 
@@ -210,13 +209,13 @@ router.post("/:target/Play", async (req, res, next) => {
         logs.push(
           `총 시간 ${minute}분 ${second}초 ${user.nickname}팀의 승리입니다.`
         );
-        result = "win";
+        result = 'win';
         break;
       } else {
         logs.push(
           `총 시간 ${minute}분 ${second}초 ${user.nickname}팀의 패배입니다.`
         );
-        result = "defeat";
+        result = 'defeat';
         break;
       }
     }
@@ -226,8 +225,8 @@ router.post("/:target/Play", async (req, res, next) => {
   const finish = async (tx) => {
     const create = await tx.gameRecord.create({
       data: {
-        nameA: user.nickname,
-        nameB: targetUser.nickname,
+        userA: user.userId,
+        userB: targetUser.userId,
         score: `${userScore}:${targetScore}`,
         result,
         logs,
@@ -242,7 +241,7 @@ router.post("/:target/Play", async (req, res, next) => {
 });
 
 //레이팅 게임-----------------------------------------------------------------------------------------------------------------
-router.post("/Rating/Play", async (req, res, next) => {
+router.get('/Rating/Play', authMiddleware, async (req, res, next) => {
   //유저 검색
   const userId = req.user.userId;
   const user = await prisma.users.findFirst({
@@ -288,7 +287,7 @@ router.post("/Rating/Play", async (req, res, next) => {
   }
 
   //대상 한명 랜덤 지정
-  const randomIndex = Math.floor(Math.random() * target.length);
+  const randomIndex = Math.floor(Math.random() * targetRanks.length);
   const targetRank = targetRanks[randomIndex];
   const targetId = targetRank.userId;
   const targetUser = await prisma.users.findFirst({
@@ -311,18 +310,15 @@ router.post("/Rating/Play", async (req, res, next) => {
 
     await Promise.all(
       members.map(async (val) => {
-        const characterDBId = squad[val];
+        const inventoryId = squad[val];
 
-        const inventory = await prisma.inventoryCharacter.findFirst({
-          where: {
-            userId,
-            characterDBId,
-          },
+        const inventory = await prisma.inventory.findFirst({
+          where: { inventoryId },
         });
 
         const character = await prisma.characterDB.findFirst({
           where: {
-            characterDBId,
+            characterDBId: inventory.characterDBId,
           },
           select: {
             name: true,
@@ -346,7 +342,7 @@ router.post("/Rating/Play", async (req, res, next) => {
 
         for (let key in data) {
           if (upgrade[key]) {
-            data[key] = data[key] * upgrade[key];
+            data[key] = data[key] * (upgrade[key] / 100);
           }
         }
 
@@ -376,14 +372,14 @@ router.post("/Rating/Play", async (req, res, next) => {
 
   //user 스쿼드
   const userMembers = Object.keys(squad).filter((key) =>
-    key.startsWith("character")
+    key.startsWith('character')
   );
   const userCharacters = await getCharacter(userMembers, squad, userId);
   const userStatus = characterStatus(userMembers, userCharacters);
 
   //target 스쿼드
   const targetMembers = Object.keys(target_squad).filter((key) =>
-    key.startsWith("character")
+    key.startsWith('character')
   );
   const targetCharacters = await getCharacter(
     targetMembers,
@@ -425,7 +421,7 @@ router.post("/Rating/Play", async (req, res, next) => {
   let time = 0;
   let userScore = 0;
   let targetScore = 0;
-  let result = "";
+  let result = '';
   const logs = [];
 
   //경기 끝나고 랭킹스코어 변동을 위한 변수
@@ -444,7 +440,7 @@ router.post("/Rating/Play", async (req, res, next) => {
     //확률 골 찬스
     if (Math.random() <= userChance / (userChance + targetChance)) {
       //userChance
-      const chance = chanceCharacter(userCharacters, userSpeedSum, length);
+      const chance = chanceCharacter(userStatus, userSpeedSum, length);
       logs.push(
         `${minute}분 ${second}초 ${user.nickname}팀 ${chance[0]}선수 달려갑니다!`
       );
@@ -463,7 +459,7 @@ router.post("/Rating/Play", async (req, res, next) => {
       }
     } else {
       //targetChance
-      const chance = chanceCharacter(targetCharacters, targetSpeedSum, length);
+      const chance = chanceCharacter(targetStatus, targetSpeedSum, length);
       logs.push(
         `${minute}분 ${second}초 ${targetUser.nickname}팀 ${chance[0]}선수 달려갑니다!`
       );
@@ -484,7 +480,7 @@ router.post("/Rating/Play", async (req, res, next) => {
     //무승부 처리
     if (time >= 45 && userScore === targetScore) {
       logs.push(`총 시간 ${minute}분 ${second}초 무승부로 끝이 납니다.`);
-      result = "draw";
+      result = 'draw';
       newRankingScore = Math.floor(userRankingScore + 25 * (0.5 - userOdds));
       break;
     }
@@ -494,14 +490,14 @@ router.post("/Rating/Play", async (req, res, next) => {
         logs.push(
           `총 시간 ${minute}분 ${second}초 ${user.nickname}팀의 승리입니다.`
         );
-        result = "win";
+        result = 'win';
         newRankingScore = Math.floor(userRankingScore + 50 * (1 - userOdds));
         break;
       } else {
         logs.push(
           `총 시간 ${minute}분 ${second}초 ${user.nickname}팀의 패배입니다.`
         );
-        result = "defeat";
+        result = 'defeat';
         newRankingScore = Math.floor(userRankingScore + 50 * (0 - userOdds));
         break;
       }
@@ -512,8 +508,8 @@ router.post("/Rating/Play", async (req, res, next) => {
   const finish = async (tx) => {
     const create = await tx.gameRecord.create({
       data: {
-        nameA: user.nickname,
-        nameB: targetUser.nickname,
+        userA: user.userId,
+        userB: targetUser.userId,
         score: `${userScore}:${targetScore}`,
         result,
         logs,
@@ -523,6 +519,9 @@ router.post("/Rating/Play", async (req, res, next) => {
       data: {
         rankingScore: newRankingScore,
         [result]: { increment: 1 },
+      },
+      where: {
+        userId: userId,
       },
     });
   };
