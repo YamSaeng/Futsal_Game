@@ -5,6 +5,7 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
+//상대 지정 게임
 router.post('/Play/:target', authMiddleware, async (req, res, next) => {
   const { target } = req.params;
   const targetId = +target;
@@ -74,7 +75,7 @@ router.post('/Play/:target', authMiddleware, async (req, res, next) => {
 
         for (let key in data) {
           if (upgrade[key]) {
-            data[key] = data[key] * upgrade[key];
+            data[key] = data[key] * (upgrade[key] / 100);
           }
         }
 
@@ -109,7 +110,7 @@ router.post('/Play/:target', authMiddleware, async (req, res, next) => {
 
   //user 스쿼드
   const userCharacters = await getCharacter(members, squad, userId);
-  if (Object.keys(userCharacters).length === 0) {
+  if (Object.keys(userCharacters).length !== members.length) {
     return res.status(404).json({
       errormessage: '당신의 스쿼드에 빈자리가 있어 경기를 취소합니다.',
     });
@@ -118,7 +119,7 @@ router.post('/Play/:target', authMiddleware, async (req, res, next) => {
 
   //target 스쿼드
   const targetCharacters = await getCharacter(members, target_squad, targetId);
-  if (Object.keys(targetCharacters).length === 0) {
+  if (Object.keys(targetCharacters).length !== members.length) {
     return res.status(404).json({
       errormessage: '상대의 스쿼드에 빈자리가 있어 경기를 취소합니다.',
     });
@@ -277,7 +278,7 @@ router.post('/Rating/Play', authMiddleware, async (req, res, next) => {
 
   //상대를 못찾을경우 범위를 늘려가며 검색
   if (targetRanks.length === 0) {
-    while (targetRanks.length === 0) {
+    for (let i = 0; i < parseInt(process.env.TARGET_SEARCH); i++) {
       num += 100;
       targetRanks = await prisma.ranking.findMany({
         where: {
@@ -290,6 +291,9 @@ router.post('/Rating/Play', authMiddleware, async (req, res, next) => {
           },
         },
       });
+      if (targetRanks.length !== 0) {
+        break;
+      }
     }
   }
 
@@ -321,7 +325,7 @@ router.post('/Rating/Play', authMiddleware, async (req, res, next) => {
         //만약 스쿼드에 선수가 없을경우 예비선수를 장착
         if (squad[val] === null) {
           const character = {
-            name: '예비 선수',
+            name: '예비',
             shoot: 40,
             speed: 40,
             pass: 40,
