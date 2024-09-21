@@ -7,6 +7,7 @@ import UserRouter from "./routes/users.router.js";
 import characterRouter from "./routes/characters.router.js";
 import rankingRouter from "./routes/ranking.router.js";
 import InventoryRouter from "./routes/inventory.router.js";
+import pickUpRouter from "./routes/pickup.router.js";
 
 const app = express();
 const PORT = 3000;
@@ -21,6 +22,7 @@ app.use("/FutsalGame", [
   UpgradeRouter,
   GameStartRouter,
   SquadRouter,
+  pickUpRouter,
   rankingRouter
 ]);
 
