@@ -50,6 +50,7 @@ model Ranking {
   win Int @default(0) @map("win")
   draw Int @default(0) @map("draw")
   defeat Int @default(0) @map("defeat")
+  rankChangeScore Int @default(0) @map("rankChangeScore")
   updatedAt DateTime @updatedAt @map("updatedAt")
 
   user Users @relation(fields: [userId], references: [userId], onDelete: Cascade)
