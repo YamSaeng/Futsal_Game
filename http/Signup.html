@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>회원가입 페이지</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Futsal Game</h1>
+      <h2>회원가입</h2>
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" placeholder="Name 입력" />
+
+      <label for="nickname">Nickname</label>
+      <input
+        type="text"
+        id="nickname"
+        name="nickname"
+        placeholder="Nickname 입력"
+      />
+
+      <label for="id">ID</label>
+      <input type="text" id="id" name="id" placeholder="ID 입력" />
+
+      <label for="password">Password</label>
+      <input
+        type="text"
+        id="password"
+        name="password"
+        placeholder="Password 입력"
+      />
+
+      <label for="confirmPassword">PasswordCheck</label>
+      <input
+        type="text"
+        id="confirmPassword"
+        name="confirmPassword"
+        placeholder="Password 확인"
+      />
+
+      <button id="signupButton" name="signupButton" type="submit">
+        Sign up
+      </button>
+    </div>
+
+    <script>
+      document
+        .getElementById('signupButton')
+        .addEventListener('click', async () => {
+          const name = document.getElementById('name').value;
+          const nickname = document.getElementById('nickname').value;
+          const id = document.getElementById('id').value;
+          const password = document.getElementById('password').value;
+          const confirmPassword =
+            document.getElementById('confirmPassword').value;
+
+          const response = await fetch('/FutsalGame/Sign-Up', {
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            //json형태로 전달
+            body: JSON.stringify({
+              name,
+              nickname,
+              id,
+              password,
+              confirmPassword,
+            }),
+          });
+          //받은 json데이터 타입을 객체로 변환
+          const result = await response.json();
+
+          if (response.ok) {
+            alert(result.message);
+            window.location.href = '/Signin';
+          } else {
+            alert(result.message);
+            window.location.href = '/Signup';
+          }
+        });
+    </script>
+  </body>
+</html>
