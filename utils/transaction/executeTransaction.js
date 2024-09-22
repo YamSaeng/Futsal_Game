@@ -1,5 +1,5 @@
-import { prisma } from "../prisma/prismaClient.js";
-import { Prisma } from "@prisma/client";
+import { prisma } from '../prisma/prismaClient.js';
+import { Prisma } from '@prisma/client';
 
 export const executeTransaction = async (transactionLogic) => {
   return await prisma.$transaction(
@@ -10,4 +10,10 @@ export const executeTransaction = async (transactionLogic) => {
       isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
     }
   );
+};
+
+export const executeTransactionNoLevel = async (transactionLogic) => {
+  return await prisma.$transaction(async (tx) => {
+    return await transactionLogic(tx);
+  });
 };
