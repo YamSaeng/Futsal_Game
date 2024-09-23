@@ -115,9 +115,10 @@ router.get("/Inventory/Check/:userId", async (req, res, next) => {
 });
 
 // 선수 방출하기
-router.delete('/Inventory/Delete/:id', authMiddleware, async(req, res, next) => {
+router.delete('/Inventory/Delete/:id', authMiddleware, async(req, res, next) => {  
   const id = req.params.id;
-
+  const user = req.user;
+  
   const isExistPlayer = await prisma.inventory.findUnique({
     where: {
       inventoryId: +id,
@@ -126,14 +127,17 @@ router.delete('/Inventory/Delete/:id', authMiddleware, async(req, res, next) => 
   if(!isExistPlayer){
     return res.status(404).json({ message: '해당 선수를 찾을 수 없습니다.'});
   }
-
+  if(isExistPlayer.userId !== user.userId){
+    return res.status(400).json({message: '올바른 계정으로 접속해주세요.'});
+  }
+  
   await prisma.inventory.delete({
     where: {
       inventoryId: +id,
     },
   });
 
-  return res.status(200).json( `${id}번 선수 방출했습니다.` );
+  return res.status(200).json( {messeage: `${id}번 선수 방출했습니다.`} );
 });
 
 export default router;
