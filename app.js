@@ -8,8 +8,10 @@ import characterRouter from "./routes/characters.router.js";
 import RankingRouter from "./routes/ranking.router.js";
 import InventoryRouter from "./routes/inventory.router.js";
 import PickUpRouter from "./routes/pickup.router.js";
-import schedule from "node-schedule";
 import { DBRankingChangeScore } from "./routes/ranking.router.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const PORT = 3000;
@@ -35,7 +37,7 @@ app.use(express.static('./http'));
 app.use('/FutsalGame', [
   UserRouter,
   characterRouter,
-  UpgradeRouter,  
+  UpgradeRouter,
   GameStartRouter,
   SquadRouter,
   RankingRouter,
@@ -49,6 +51,6 @@ app.listen(PORT, () => {
 
 DBRankingChangeScore();
 
-const job = schedule.scheduleJob('* 0/30 * * * *', function(){
+setInterval(() => {
   DBRankingChangeScore();
-});
+}, process.env.RANKING_RANK_CHANGE_TIME);
