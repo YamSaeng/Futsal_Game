@@ -18,7 +18,7 @@ router.patch('/Cash', authMiddleware, async (req, res, next) => {
     },
   });
 
-  return res.status(200).json({ message: `캐시가 5000원 추가되었습니다. 현재 캐시 잔액: ${cash}원` });
+  return res.status(200).json({ message: `캐시가 5000원 추가되었습니다. 현재 캐시 잔액: ${cash + 5000}원` });
 });
 
 // 캐시 뽑기 (선수 영입)
