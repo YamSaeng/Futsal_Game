@@ -6,8 +6,7 @@ const rankingRouter = express.Router();
 
 let previousRankings = {};
 
-export async function DBRankingChangeScore() {
-    console.log("DBRankingChange Call");
+export async function DBRankingChangeScore() {    
     const currentRankings = await prisma.ranking.findMany({
         orderBy: {
             rankingScore: 'desc'
@@ -40,7 +39,7 @@ export async function DBRankingChangeScore() {
         // ranking Table에 순위와 순위 변동을 기록
         await Promise.all(
             currentRankings.map(async (currentRanking) => {
-                await prisma.ranking.update({
+                await tx.ranking.update({
                     where: {
                         userId: currentRanking.userId
                     },
