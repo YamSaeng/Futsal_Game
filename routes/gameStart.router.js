@@ -1,6 +1,6 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/prismaClient.js';
-import { executeTransaction } from '../utils/transaction/executeTransaction.js';
+import { executeTransactionNoLevel } from '../utils/transaction/executeTransaction.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
@@ -242,7 +242,7 @@ router.post('/Play/:target', authMiddleware, async (req, res, next) => {
     });
     return create;
   };
-  await executeTransaction(finish);
+  await executeTransactionNoLevel(finish);
 
   //응답
   return res.status(200).json({ ...logs });
@@ -540,7 +540,7 @@ router.post('/Rating/Play', authMiddleware, async (req, res, next) => {
       },
     });
   };
-  await executeTransaction(finish);
+  await executeTransactionNoLevel(finish);
 
   //응답
   return res.status(200).json({ ...logs });

@@ -17,15 +17,29 @@ const PORT = 3000;
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/FutsalGame", [
-  InventoryRouter,
+// 'http' 폴더 내 정적 파일 제공 (예: CSS, JS, 이미지)
+app.use(express.static('http'));
+
+// '/Signin' 경로로 Signin.html 파일 제공
+// process.cwd()은 현재 작업 디렉토리의 경로를 반환하는 함수
+app.get('/Signin', (req, res) => {
+  res.sendFile('http/Signin.html', { root: process.cwd() });
+});
+
+app.get('/Signup', (req, res) => {
+  res.sendFile('http/Signup.html', { root: process.cwd() });
+});
+
+app.use(express.static('./http'));
+
+app.use('/FutsalGame', [
   UserRouter,
   characterRouter,
   UpgradeRouter,  
   GameStartRouter,
   SquadRouter,
-  pickUpRouter,
-  rankingRouter
+  RankingRouter,
+  InventoryRouter,
 ]);
 
 app.listen(PORT, () => {
