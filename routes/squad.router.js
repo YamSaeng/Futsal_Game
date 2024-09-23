@@ -6,95 +6,100 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 const router = express.Router();
 
 //스쿼드 인앤아웃
-router.post('/Squad/:inventoryId', authMiddleware, async (req, res, next) => {
-  const userId = req.user.userId;
-  const { inventoryId } = req.params;
-  const inventory = await prisma.inventory.findFirst({
-    where: { inventoryId: +inventoryId },
-  });
-
-  //유효성체크
-  if (!inventory) {
-    return res.status(404).json({
-      errormessage: '존재하지 않는 인벤토리id입니다.',
+router.post(
+  '/Squad/in-out/:inventoryId',
+  authMiddleware,
+  async (req, res, next) => {
+    const userId = req.user.userId;
+    const { inventoryId } = req.params;
+    const inventory = await prisma.inventory.findFirst({
+      where: { inventoryId: +inventoryId },
     });
-  }
-  if (inventory.userId !== userId) {
-    return res.status(400).json({
-      errormessage: '인증된 ID와 Inventory 사용자가 일치하지 않습니다.',
+
+    //유효성체크
+    if (!inventory) {
+      return res.status(404).json({
+        errormessage: '존재하지 않는 인벤토리id입니다.',
+      });
+    }
+    if (inventory.userId !== userId) {
+      return res.status(400).json({
+        errormessage: '인증된 ID와 Inventory 사용자가 일치하지 않습니다.',
+      });
+    }
+
+    const characterDB = await prisma.characterDB.findFirst({
+      where: { characterDBId: inventory.characterDBId },
     });
-  }
 
-  const characterDB = await prisma.characterDB.findFirst({
-    where: { characterDBId: inventory.characterDBId },
-  });
+    const squad = await prisma.squad.findFirst({
+      where: { userId },
+    });
 
-  const squad = await prisma.squad.findFirst({
-    where: { userId },
-  });
+    if (inventory.equip !== null) {
+      const equipLocation = inventory.equip;
+      const result = async (tx) => {
+        const squadout = await tx.squad.update({
+          where: { squadId: squad.squadId },
+          data: {
+            [equipLocation]: null,
+          },
+        });
+        const equipUpdate = await tx.inventory.update({
+          where: { inventoryId: inventory.inventoryId },
+          data: {
+            equip: null,
+          },
+        });
+      };
+      executeTransaction(result);
+      return res
+        .status(201)
+        .json({ message: `${characterDB.name}이 스쿼드에서 제외 되었습니다.` });
+    }
 
-  if (inventory.equip !== null) {
-    const equipLocation = inventory.equip;
+    //빈자리 찾기
+    let location;
+    if (squad.characterA === null) {
+      location = 'characterA';
+    } else if (squad.characterB === null) {
+      location = 'characterB';
+    } else if (squad.characterC === null) {
+      location = 'characterC';
+    } else {
+      location = null;
+    }
+    if (location === null) {
+      return res
+        .status(404)
+        .json({ errormessage: '스쿼드에 빈 자리가 없습니다' });
+    }
+
+    //선발
     const result = async (tx) => {
-      const squadout = await tx.squad.update({
+      const squadIn = await tx.squad.update({
         where: { squadId: squad.squadId },
         data: {
-          [equipLocation]: null,
+          [location]: inventory.inventoryId,
         },
       });
       const equipUpdate = await tx.inventory.update({
         where: { inventoryId: inventory.inventoryId },
         data: {
-          equip: null,
+          equip: location,
         },
       });
     };
     executeTransaction(result);
     return res
       .status(201)
-      .json({ message: `${characterDB.name}이 스쿼드에서 제외 되었습니다.` });
+      .json({ message: `${characterDB.name}이 스쿼드에 추가 되었습니다.` });
   }
-
-  //빈자리 찾기
-  let location;
-  if (squad.characterA === null) {
-    location = 'characterA';
-  } else if (squad.characterB === null) {
-    location = 'characterB';
-  } else if (squad.characterC === null) {
-    location = 'characterC';
-  } else {
-    location = null;
-  }
-  if (location === null) {
-    return res
-      .status(404)
-      .json({ errormessage: '스쿼드에 빈 자리가 없습니다' });
-  }
-
-  //선발
-  const result = async (tx) => {
-    const squadIn = await tx.squad.update({
-      where: { squadId: squad.squadId },
-      data: {
-        [location]: inventory.inventoryId,
-      },
-    });
-    const equipUpdate = await tx.inventory.update({
-      where: { inventoryId: inventory.inventoryId },
-      data: {
-        equip: location,
-      },
-    });
-  };
-  executeTransaction(result);
-  return res
-    .status(201)
-    .json({ message: `${characterDB.name}이 스쿼드에 추가 되었습니다.` });
-});
+);
 
 //스쿼드 올아웃
 router.patch('/Squad/All-Out', authMiddleware, async (req, res, next) => {
+  console.log('PATCH 요청이 들어옴');
   const userId = req.user.userId;
   const squad = await prisma.squad.findFirst({
     where: { userId },
@@ -177,6 +182,8 @@ router.get('/Squad/Check', authMiddleware, async (req, res, next) => {
     });
     //불러온 캐릭터에 업그레이드 수치 합산
     characterA = await upgradeCharacter(inventoryA);
+    characterA.upgrade = inventoryA.upgrade;
+    characterA.squad = 'characterA';
   } else {
     characterA = null;
   }
@@ -189,6 +196,8 @@ router.get('/Squad/Check', authMiddleware, async (req, res, next) => {
       where: { inventoryId: squad.characterB },
     });
     characterB = await upgradeCharacter(inventoryB);
+    characterB.upgrade = inventoryB.upgrade;
+    characterB.squad = 'characterB';
   } else {
     characterB = null;
   }
@@ -200,95 +209,17 @@ router.get('/Squad/Check', authMiddleware, async (req, res, next) => {
       where: { inventoryId: squad.characterC },
     });
     characterC = await upgradeCharacter(inventoryC);
+    characterC.upgrade = inventoryC.upgrade;
+    characterC.squad = 'characterC';
   } else {
     characterC = null;
   }
 
   //불러온 스쿼드 바디로 전달
   return res.status(200).json({
-    squad: {
-      A: characterA,
-      B: characterB,
-      C: characterC,
-    },
-  });
-});
-
-router.get('/Squad/Check/:userId', async (req, res, next) => {
-  //url에서 유저 아이디 받아오기
-  const { userId } = req.params;
-
-  //유저 아이디로 스쿼드 검색
-  const squad = await prisma.squad.findFirst({
-    where: { userId: +userId },
-  });
-
-  //유효성 체크
-  if (!squad) {
-    return res
-      .status(404)
-      .json({ errormessage: '존재하지 않는 유저id입니다.' });
-  }
-
-  //이하 동일
-  async function upgradeCharacter(inventory) {
-    const character = await prisma.characterDB.findFirst({
-      where: {
-        characterDBId: inventory.characterDBId,
-      },
-    });
-    const upgrade = await prisma.upgradeDB.findFirst({
-      where: {
-        upgrade: inventory.upgrade,
-      },
-    });
-    for (let key in character) {
-      if (upgrade[key]) {
-        character[key] = Math.floor(character[key] * (upgrade[key] / 100));
-      }
-    }
-    return character;
-  }
-
-  let inventoryA;
-  let characterA;
-  if (squad.characterA !== null) {
-    inventoryA = await prisma.inventory.findFirst({
-      where: { inventoryId: squad.characterA },
-    });
-    characterA = await upgradeCharacter(inventoryA);
-  } else {
-    characterA = null;
-  }
-
-  let inventoryB;
-  let characterB;
-  if (squad.characterB !== null) {
-    inventoryB = await prisma.inventory.findFirst({
-      where: { inventoryId: squad.characterB },
-    });
-    characterB = await upgradeCharacter(inventoryB);
-  } else {
-    characterB = null;
-  }
-
-  let inventoryC;
-  let characterC;
-  if (squad.characterC !== null) {
-    inventoryC = await prisma.inventory.findFirst({
-      where: { inventoryId: squad.characterC },
-    });
-    characterC = await upgradeCharacter(inventoryC);
-  } else {
-    characterC = null;
-  }
-
-  return res.status(200).json({
-    squad: {
-      A: characterA,
-      B: characterB,
-      C: characterC,
-    },
+    A: characterA,
+    B: characterB,
+    C: characterC,
   });
 });
 

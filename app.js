@@ -1,15 +1,15 @@
-import express from "express";
-import UpgradeRouter from "./routes/upgrade.router.js";
-import GameStartRouter from "./routes/gameStart.router.js";
-import SquadRouter from "./routes/squad.router.js";
-import cookieParser from "cookie-parser";
-import UserRouter from "./routes/users.router.js";
-import characterRouter from "./routes/characters.router.js";
-import RankingRouter from "./routes/ranking.router.js";
-import InventoryRouter from "./routes/inventory.router.js";
-import PickUpRouter from "./routes/pickup.router.js";
-import { DBRankingChangeScore } from "./routes/ranking.router.js";
-import dotenv from "dotenv";
+import express from 'express';
+import UpgradeRouter from './routes/upgrade.router.js';
+import GameStartRouter from './routes/gameStart.router.js';
+import SquadRouter from './routes/squad.router.js';
+import cookieParser from 'cookie-parser';
+import UserRouter from './routes/users.router.js';
+import characterRouter from './routes/characters.router.js';
+import RankingRouter from './routes/ranking.router.js';
+import InventoryRouter from './routes/inventory.router.js';
+import PickUpRouter from './routes/pickup.router.js';
+import { DBRankingChangeScore } from './routes/ranking.router.js';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -32,7 +32,9 @@ app.get('/Signup', (req, res) => {
   res.sendFile('http/Signup.html', { root: process.cwd() });
 });
 
-app.use(express.static('./http'));
+app.get('/Main', (req, res) => {
+  res.sendFile('http/Main.html', { root: process.cwd() });
+});
 
 app.use('/FutsalGame', [
   UserRouter,
@@ -42,11 +44,11 @@ app.use('/FutsalGame', [
   SquadRouter,
   RankingRouter,
   InventoryRouter,
-  PickUpRouter
+  PickUpRouter,
 ]);
 
 app.listen(PORT, () => {
-  console.log(PORT, "포트로 서버가 열렸어요!");
+  console.log(PORT, '포트로 서버가 열렸어요!');
 });
 
 DBRankingChangeScore();
