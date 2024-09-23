@@ -5,9 +5,9 @@ import SquadRouter from "./routes/squad.router.js";
 import cookieParser from "cookie-parser";
 import UserRouter from "./routes/users.router.js";
 import characterRouter from "./routes/characters.router.js";
-import rankingRouter from "./routes/ranking.router.js";
+import RankingRouter from "./routes/ranking.router.js";
 import InventoryRouter from "./routes/inventory.router.js";
-import pickUpRouter from "./routes/pickup.router.js";
+import PickUpRouter from "./routes/pickup.router.js";
 import schedule from "node-schedule";
 import { DBRankingChangeScore } from "./routes/ranking.router.js";
 
@@ -40,6 +40,7 @@ app.use('/FutsalGame', [
   SquadRouter,
   RankingRouter,
   InventoryRouter,
+  PickUpRouter
 ]);
 
 app.listen(PORT, () => {
