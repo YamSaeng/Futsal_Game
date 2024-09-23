@@ -5,6 +5,7 @@ import { MakeTime, TimeDifference } from '../utils/time/time.js';
 import bcrypt from 'bcrypt';
 import loginAuthMiddleware from '../middlewares/loginAuth.middleware.js';
 import dotenv from 'dotenv';
+import authMiddleware from '../middlewares/auth.middleware.js';
 
 const usersRouter = express.Router();
 dotenv.config();
@@ -18,27 +19,27 @@ usersRouter.post('/Sign-Up', async (req, res, next) => {
         }
     });
 
-    // 아이디, 이름, 별명이 비어있는지 확인
+    // 아이디, 이름, 별명이 비어있는지 
     if (id.length == 0) {
         return res.status(404).json({ message: `아이디를 입력해주세요.` });
     }
 
     if (name.length == 0) {
-        return res.status(404).json({message: `이름을 입력해주세요.`});
+        return res.status(404).json({ message: `이름을 입력해주세요.` });
     }
 
     if (nickname.length == 0) {
         return res.status(404).json({ message: `별명을 입력해주세요,` });
     }
     
-    // 정규식 이용해서 이름과 별명에 한글 자음과 모음이 독립적으로 들어갈 수 없게 함
-    let nameNicknameRule = /^([가-힣\x20])+$/;
-    if(!nameNicknameRule.test(name)){
-        return res.status(404).json({message: `이름에는 한글 자음, 모음이 독립적으로 들어갈 수 없습니다.`})
+    // 정규식 이용해서 이름과 별명에 한글 자음, 모음, 숫자, 공백이 포함되지 않도록 함
+    let nameNicknameRule = /^[가-힣A-Za-z]+$/;    
+    if (!nameNicknameRule.test(name)) {
+        return res.status(404).json({ message: `이름에는 한글 자음, 모음, 숫자, 공백이 입력되면 안됩니다.` })
     }
 
-    if(!nameNicknameRule.test(nickname)){
-        return res.status(404).json({message: `별명에는 한글 자음, 모음이 독립적으로 들어갈 수 없습니다.`})
+    if (!nameNicknameRule.test(nickname)) {
+        return res.status(404).json({ message: `별명에는 한글 자음, 모음, 숫자, 공백이 입력되면 안됩니다.` })
     }
 
     // 정규식으로 아이디를 검사 ( 소문자 영어 + 숫자 조합만 통과)
@@ -146,7 +147,7 @@ async function AccessTokenExpired(id, refreshTokenDBData, res) {
         // RefreshToken이 만료되었는지 확인
         const refreshTokenCheck = ValidateToken(refreshTokenDBData, process.env.REFRESH_TOKEN_SECRET_KEY);
         if (!refreshTokenCheck) {
-            // RefreshDB createdAt, expiredAt 컬럼 사용 용도 : 
+            // RefreshDB createdAt, ex piredAt 컬럼 사용 용도 : 
             // JWT 없이 Refresh Token의 Expire 시간을 제어할 수 있는 용도로 사용
             // 예) JWT로 3시간 후 만료로 발급했으나 모종의 이유로 1시간 후 만료로 바꿔야하는 경우,
             //     JWT는 수정을 할 수 없기 때문에 DB에 있는 시간값으로 판정한다.
@@ -248,6 +249,21 @@ usersRouter.post('/Sign-In', loginAuthMiddleware, async (req, res, next) => {
             // 로그인 성공
             return res.status(200).json({ message: `${id}로 로그인에 성공했습니다.` });
     }
+})
+
+// 로그 아웃
+// 로그 아웃을 하면 해당 아이디의 액세스 토큰은 유효하지 않아야함
+// 유효하지 않아야 다른 기능에 접근하면 거절할 수 있기 때문
+usersRouter.post('/Sign-Out', authMiddleware, async (req, res, next) => {
+    const refreshTokenExist = await prisma.refreshTokens.findFirst({
+        where: {
+            id: req.user.id
+        }
+    });
+
+    if (!refreshTokenExist) {
+        return res.status(404).json({ message: `Error` });
+    }        
 })
 
 export default usersRouter;
