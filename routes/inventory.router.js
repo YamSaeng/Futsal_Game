@@ -35,6 +35,7 @@ router.get("/Inventory/Check", authMiddleware, async (req, res, next) => {
       inventoryId: inventory.inventoryId,
       ...character,
       upgrade: upgrade.upgrade,
+      equip: inventory.equip
     };
     for (let key in character) {
       if (upgrade[key]) {
@@ -90,6 +91,7 @@ router.get("/Inventory/Check/:userId", async (req, res, next) => {
       inventoryId: inventory.inventoryId,
       ...character,
       upgrade: upgrade.upgrade,
+      equip: inventory.equip
     };
     for (let key in character) {
       if (upgrade[key]) {
