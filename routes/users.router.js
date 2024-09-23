@@ -18,6 +18,35 @@ usersRouter.post('/Sign-Up', async (req, res, next) => {
         }
     });
 
+    // 아이디, 이름, 별명이 비어있는지 확인
+    if (id.length == 0) {
+        return res.status(404).json({ message: `아이디를 입력해주세요.` });
+    }
+
+    if (name.length == 0) {
+        return res.status(404).json({message: `이름을 입력해주세요.`});
+    }
+
+    if (nickname.length == 0) {
+        return res.status(404).json({ message: `별명을 입력해주세요,` });
+    }
+    
+    // 정규식 이용해서 이름과 별명에 한글 자음과 모음이 독립적으로 들어갈 수 없게 함
+    let nameNicknameRule = /^([가-힣\x20])+$/;
+    if(!nameNicknameRule.test(name)){
+        return res.status(404).json({message: `이름에는 한글 자음, 모음이 독립적으로 들어갈 수 없습니다.`})
+    }
+
+    if(!nameNicknameRule.test(nickname)){
+        return res.status(404).json({message: `별명에는 한글 자음, 모음이 독립적으로 들어갈 수 없습니다.`})
+    }
+
+    // 정규식으로 아이디를 검사 ( 소문자 영어 + 숫자 조합만 통과)
+    const engNumIdRule = /^(?=[a-za-z])(?=.*[0-9]).{2,10}$/;
+    if (!engNumIdRule.test(id)) {
+        return res.status(409).json({ message: '아이디를 소문자 영어와 숫자를 조합해 입력하세요 ( 최소 2글자, 최대 10글자 )' });
+    }
+
     if (isExistUser) {
         return res.status(404).json({ message: `이미 존재하는 아이디입니다.` });
     }
