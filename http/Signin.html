@@ -21,10 +21,43 @@
         placeholder="password 입력"
       />
 
-      <button id="signinButton" name="signinButton" type="submit">
+      <button id="signinButton" name="signinButton" type="button">
         Sign in
       </button>
       <p>처음이신가요? <a href="/Signup">Sign up</a></p>
     </div>
+
+    <script>
+      document
+        .getElementById('signinButton')
+        .addEventListener('click', async () => {
+          const id = document.getElementById('id').value;
+          const password = document.getElementById('password').value;
+
+          const response = await fetch('/FutsalGame/Sign-In', {
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            //json형태로 전달
+            body: JSON.stringify({
+              id,
+              password,
+            }),
+          });
+          //받은 json데이터 타입을 객체로 변환
+          const result = await response.json();
+
+          if (response.ok) {
+            const token = response.headers.get('authorization');
+            localStorage.setItem('authorization', token);
+            alert(result.message);
+            window.location.href = '/Main';
+          } else {
+            alert(result.message);
+            window.location.href = '/Signin';
+          }
+        });
+    </script>
   </body>
 </html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>메인화면</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="backContainer">
+      <div class="container">
+        <h1>Util</h1>
+        <div class="button-container">
+          <button id="allcharacter" name="allcharacter" class="mainButton">
+            모든 선수 목록 조회
+          </button>
+          <button
+            id="selectcharacter"
+            name="selectcharacter"
+            class="mainButton"
+          >
+            특정 선수 조회
+          </button>
+          <button id="peekinventory" name="peekinventory" class="mainButton">
+            남의 계정 인벤토리 몰래 훔쳐보기
+          </button>
+          <button id="cash" name="cash" class="mainButton">
+            SHOW ME THE MONEY
+          </button>
+          <button id="allrankcheck" name="allrankcheck" class="mainButton">
+            전체 랭킹 확인
+          </button>
+          <button id="rankcheck" name="rankcheck" class="mainButton">
+            랭킹 검색
+          </button>
+        </div>
+      </div>
+      <div class="container">
+        <h1>Futsal Game</h1>
+        <div class="button-container">
+          <button id="inventory" name="inventory" class="mainButton">
+            보유 선수 목록
+          </button>
+          <button id="squadcheck" name="squadcheck" class="mainButton">
+            현재 스쿼드
+          </button>
+          <button id="pickup" name="pickup" class="mainButton2">뽑기</button>
+          <button id="pickupten" name="pickupten" class="mainButton2">
+            10 + 1뽑기
+          </button>
+          <button id="squadpick" name="squadpick" class="mainButton">
+            선수 선발/해제
+          </button>
+          <button id="upgrade" name="upgrade" class="mainButton">
+            강화 하기
+          </button>
+          <button id="squadallout" name="squadallout" class="mainButton">
+            스쿼드 전체 해제
+          </button>
+          <button id="targetgame" name="targetgame" class="mainButton">
+            대상 지정 게임
+          </button>
+          <button id="ratinggame" name="ratinggame" class="mainButton">
+            레이팅 게임
+          </button>
+        </div>
+      </div>
+      <div id="result-container" class="result-container"></div>
+    </div>
+
+    <div id="squadModal" class="modal">
+      <div class="container">
+        <h2>인벤토리ID를 입력해주세요</h2>
+        <input
+          type="text"
+          id="inventoryModal"
+          placeholder="선발될 선수의 인벤토리ID 입력"
+        />
+        <button id="squadModalButton" class="mainButton">확인</button>
+      </div>
+    </div>
+
+    <div id="targetModal" class="modal">
+      <div class="container">
+        <h2>경기 대상ID를 입력해주세요</h2>
+        <input type="text" id="target" placeholder="경기 대상ID 입력" />
+        <button id="targetModalButton" class="mainButton">확인</button>
+      </div>
+    </div>
+
+    <div id="upgradeModal" class="modal">
+      <div class="container">
+        <h2>강화할 선수가 들어있는 인벤토리ID를 입력해주세요</h2>
+        <input type="text" id="upgradeId" placeholder="경기 대상ID 입력" />
+        <button id="upgradeModalButton" class="mainButton">확인</button>
+      </div>
+    </div>
+
+    <div id="selectcharacterModal" class="modal">
+      <div class="container">
+        <h2>확인할 선수ID를 입력해주세요</h2>
+        <input
+          type="text"
+          id="selectcharacterId"
+          placeholder="경기 대상ID 입력"
+        />
+        <button id="selectcharacterModalButton" class="mainButton">확인</button>
+      </div>
+    </div>
+
+    <div id="peekModal" class="modal">
+      <div class="container">
+        <h2>훔쳐볼 대상의 유저ID를 입력해주세요</h2>
+        <input type="text" id="peekId" placeholder="유저ID 입력" />
+        <button id="peekvModalButton" class="mainButton">확인</button>
+      </div>
+    </div>
+
+    <div id="rankModal" class="modal">
+      <div class="container">
+        <h2>유저ID를 입력해주세요</h2>
+        <input type="text" id="rankId" placeholder="유저ID 입력" />
+        <button id="rankvModalButton" class="mainButton">확인</button>
+      </div>
+    </div>
+
+    <script src="/js/utils.js"></script>
+    <script src="/js/main.js"></script>
+  </body>
+</html>
