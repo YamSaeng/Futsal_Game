@@ -8,6 +8,8 @@ import characterRouter from "./routes/characters.router.js";
 import rankingRouter from "./routes/ranking.router.js";
 import InventoryRouter from "./routes/inventory.router.js";
 import pickUpRouter from "./routes/pickup.router.js";
+import schedule from "node-schedule";
+import { DBRankingChangeScore } from "./routes/ranking.router.js";
 
 const app = express();
 const PORT = 3000;
@@ -19,7 +21,7 @@ app.use("/FutsalGame", [
   InventoryRouter,
   UserRouter,
   characterRouter,
-  UpgradeRouter,
+  UpgradeRouter,  
   GameStartRouter,
   SquadRouter,
   pickUpRouter,
@@ -28,4 +30,10 @@ app.use("/FutsalGame", [
 
 app.listen(PORT, () => {
   console.log(PORT, "포트로 서버가 열렸어요!");
+});
+
+DBRankingChangeScore();
+
+const job = schedule.scheduleJob('* 0/30 * * * *', function(){
+  DBRankingChangeScore();
 });
