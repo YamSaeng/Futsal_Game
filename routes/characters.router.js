@@ -4,7 +4,7 @@ import { prisma } from '../utils/prisma/prismaClient.js';
 const CharactersRouter = express.Router();
 
 // DB 선수 전체 정보 조회
-CharactersRouter.get('/Character/Check', async (req, res, next) => {
+CharactersRouter.get('/Character/CheckAll', async (req, res, next) => {
   try {
     const Check = await prisma.characterDB.findMany();
     return res.status(200).json({ ...Check });
@@ -16,7 +16,7 @@ CharactersRouter.get('/Character/Check', async (req, res, next) => {
 
 // DB 특정 선수 정보 조회
 CharactersRouter.get(
-  '/Character/Check/:characterDBId',
+  '/Character/OneCheck/:characterDBId',
   async (req, res, next) => {
     try {
       const characterDBId = req.params.characterDBId; // 코드는 URI의 parameter로 전달 받기
