@@ -32,6 +32,7 @@ router.get("/Inventory/Check", authMiddleware, async (req, res, next) => {
       },
     });
     const upgradedCharacter = {
+      inventoryId: inventory.inventoryId,
       ...character,
       upgrade: upgrade.upgrade,
     };
@@ -51,8 +52,12 @@ router.get("/Inventory/Check", authMiddleware, async (req, res, next) => {
     promiseAll.push(upgradeCharacter(inventory[i]));
   }
   await Promise.all(promiseAll);
+  
+  characters.sort((a, b) => a.inventoryId - b.inventoryId);
+
   return res.status(200).json({ ...characters });
 });
+
 
 // 다른 사람의 계정에 있는 CharacterDB(보유 선수 목록) 조회하기
 router.get("/Inventory/Check/:userId", async (req, res, next) => {
@@ -82,6 +87,7 @@ router.get("/Inventory/Check/:userId", async (req, res, next) => {
       },
     });
     const upgradedCharacter = {
+      inventoryId: inventory.inventoryId,
       ...character,
       upgrade: upgrade.upgrade,
     };
@@ -100,6 +106,9 @@ router.get("/Inventory/Check/:userId", async (req, res, next) => {
     promiseAll.push(upgradeCharacter(inventory[i]));
   }
   await Promise.all(promiseAll);
+
+  characters.sort((a, b) => a.inventoryId - b.inventoryId);
+
   return res.status(200).json({ ...characters });
 });
 
