@@ -82,7 +82,7 @@ document
       alert(result.message);
       window.location.href = '/Main';
     } else {
-      alert(result.message);
+      alert(result.errormessage);
       window.location.href = '/Main';
     }
   });
@@ -155,7 +155,7 @@ document
       alert(result.message);
       window.location.href = '/Main';
     } else {
-      alert(result.message);
+      alert(result.errormessage);
       window.location.href = '/Main';
     }
   });
@@ -317,6 +317,10 @@ document
       },
     });
     const result = await response.json();
+
+    document.getElementById('rankModal').style.display = 'none';
+    document.getElementById('rankId').value = '';
+
     if (response.ok) {
       document.getElementById('result-container').innerHTML = '';
       for (let key in result) {
