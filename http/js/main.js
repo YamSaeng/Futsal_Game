@@ -68,6 +68,8 @@ document
   .getElementById('squadModalButton')
   .addEventListener('click', async () => {
     const inventoryId = document.getElementById('inventoryModal').value;
+    document.getElementById('squadModal').style.display = 'none';
+    document.getElementById('inventoryModal').value = '';
     const response = await fetch(`/FutsalGame/Squad/in-out/${inventoryId}`, {
       method: 'POST',
       headers: {
@@ -75,8 +77,7 @@ document
         authorization: token,
       },
     });
-    document.getElementById('squadModal').style.display = 'none';
-    document.getElementById('inventoryModal').value = '';
+
     const result = await response.json();
     if (response.ok) {
       alert(result.message);
@@ -95,6 +96,8 @@ document
   .getElementById('targetModalButton')
   .addEventListener('click', async () => {
     const targetId = document.getElementById('target').value;
+    document.getElementById('targetModal').style.display = 'none';
+    document.getElementById('target').value = '';
     const response = await fetch(`/FutsalGame/Play/${targetId}`, {
       method: 'POST',
       headers: {
@@ -102,9 +105,6 @@ document
         authorization: token,
       },
     });
-
-    document.getElementById('targetModal').style.display = 'none';
-    document.getElementById('target').value = '';
 
     const result = await response.json();
     if (response.ok) {
@@ -142,6 +142,8 @@ document
   .getElementById('upgradeModalButton')
   .addEventListener('click', async () => {
     const inventoryId = document.getElementById('upgradeId').value;
+    document.getElementById('upgradeModal').style.display = 'none';
+    document.getElementById('upgradeId').value = '';
     const response = await fetch(`/FutsalGame/Upgrade/${inventoryId}`, {
       method: 'PATCH',
       headers: {
@@ -161,7 +163,7 @@ document
   });
 
 document.getElementById('allcharacter').addEventListener('click', async () => {
-  const response = await fetch('/FutsalGame/Character/Check', {
+  const response = await fetch('/FutsalGame/Character/CheckAll', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -191,7 +193,9 @@ document
   .getElementById('selectcharacterModalButton')
   .addEventListener('click', async () => {
     const Id = document.getElementById('selectcharacterId').value;
-    const response = await fetch(`/FutsalGame/Character/Check/${Id}`, {
+    document.getElementById('selectcharacterModal').style.display = 'none';
+    document.getElementById('selectcharacterId').value = '';
+    const response = await fetch(`/FutsalGame/Character/OneCheck/${Id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -199,9 +203,6 @@ document
       },
     });
     const result = await response.json();
-
-    document.getElementById('selectcharacterModal').style.display = 'none';
-    document.getElementById('selectcharacterId').value = '';
 
     if (response.ok) {
       document.getElementById('result-container').innerHTML = '';
@@ -220,6 +221,8 @@ document
   .getElementById('peekvModalButton')
   .addEventListener('click', async () => {
     const Id = document.getElementById('peekId').value;
+    document.getElementById('peekModal').style.display = 'none';
+    document.getElementById('peekId').value = '';
     const response = await fetch(`/FutsalGame/Inventory/Check/${Id}`, {
       method: 'GET',
       headers: {
@@ -228,9 +231,6 @@ document
       },
     });
     const result = await response.json();
-
-    document.getElementById('peekModal').style.display = 'none';
-    document.getElementById('peekId').value = '';
 
     if (response.ok) {
       document.getElementById('result-container').innerHTML = '';
@@ -281,8 +281,29 @@ document.getElementById('pickup').addEventListener('click', async () => {
   }
 });
 
+document.getElementById('pickupten').addEventListener('click', async () => {
+  const response = await fetch(`/FutsalGame/Pick-up/All-at-once`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      authorization: token,
+    },
+  });
+  const result = await response.json();
+
+  if (response.ok) {
+    document.getElementById('result-container').innerHTML = '';
+    for (let key in result) {
+      createResultBox(result[key]);
+    }
+  } else {
+    alert(result.message);
+    window.location.href = '/Main';
+  }
+});
+
 document.getElementById('allrankcheck').addEventListener('click', async () => {
-  const response = await fetch(`/FutsalGame/Ranking/Check`, {
+  const response = await fetch(`/FutsalGame/Ranking/AllCheck`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -309,7 +330,9 @@ document
   .getElementById('rankvModalButton')
   .addEventListener('click', async () => {
     const id = document.getElementById('rankId').value;
-    const response = await fetch(`/FutsalGame/Ranking/Check/${id}`, {
+    document.getElementById('rankModal').style.display = 'none';
+    document.getElementById('rankId').value = '';
+    const response = await fetch(`/FutsalGame/Ranking/SingleCheck/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -318,14 +341,38 @@ document
     });
     const result = await response.json();
 
-    document.getElementById('rankModal').style.display = 'none';
-    document.getElementById('rankId').value = '';
-
     if (response.ok) {
       document.getElementById('result-container').innerHTML = '';
       for (let key in result) {
         createResultBox(result[key]);
       }
+    } else {
+      alert(result.message);
+      window.location.href = '/Main';
+    }
+  });
+
+document.getElementById('delinven').addEventListener('click', async () => {
+  document.getElementById('delModal').style.display = 'block';
+});
+
+document
+  .getElementById('delModalButton')
+  .addEventListener('click', async () => {
+    const id = document.getElementById('delId').value;
+    document.getElementById('delModal').style.display = 'none';
+    document.getElementById('delId').value = '';
+    const response = await fetch(`/FutsalGame/Inventory/Delete/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        authorization: token,
+      },
+    });
+    const result = await response.json();
+    if (response.ok) {
+      alert(result.message);
+      window.location.href = '/Main';
     } else {
       alert(result.message);
       window.location.href = '/Main';
