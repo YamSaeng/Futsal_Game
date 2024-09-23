@@ -67,7 +67,7 @@ rankingRouter.get('/Ranking/Check', async (req, res, next) => {
     });
 
     // 순위 변동 결과 반환
-    return res.status(200).json({ currentRankings });
+    return res.status(200).json({ ... currentRankings });
 });
 
 rankingRouter.get('/Ranking/Check/:userId', async (req, res, next) => {
