@@ -1,12 +1,13 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/prismaClient.js'
+import { executeTransaction } from '../utils/transaction/executeTransaction.js';
 
 const rankingRouter = express.Router();
 
 let previousRankings = {};
 
-rankingRouter.get('/Ranking/Check', async (req, res, next) => {
-    // rankingScore 컬럼을 기준으로 내림차순한 전체 데이터 값들을 가져옴
+export async function DBRankingChangeScore() {
+    console.log("DBRankingChange Call");
     const currentRankings = await prisma.ranking.findMany({
         orderBy: {
             rankingScore: 'desc'
@@ -20,53 +21,50 @@ rankingRouter.get('/Ranking/Check', async (req, res, next) => {
         rank++;
     });
 
-    // ranking Table에 업데이트
-    await Promise.all(
-        currentRankings.map(async (currentRanking) => {
-            await prisma.ranking.update({
-                where: {
-                    userId: currentRanking.userId
-                },
-                data: {
-                    rank: currentRanking.rank
-                }
-            })
-        })
-    );
-        
+
     // 순위 변동 계산
-    for(let pRankKey in previousRankings)
-    {
+    for (let pRankKey in previousRankings) {
         const pRankData = previousRankings[pRankKey];
-        for(let cRankKey in currentRankings)
-        {
+        for (let cRankKey in currentRankings) {
             const cRankData = currentRankings[cRankKey];
-            if(pRankData.userId == cRankData.userId)
-            {
+            if (pRankData.userId == cRankData.userId) {
                 const rankChangeScore = pRankData.rank - cRankData.rank;
 
                 cRankData.rankChangeScore = rankChangeScore;
                 break;
-            }            
+            }
         }
     }
 
-    // 순위 변동을 DB에 업데이트
-    await Promise.all(
-        currentRankings.map(async (currentRanking) => {
-            await prisma.ranking.update({
-                where: {
-                    userId: currentRanking.userId
-                },
-                data: {
-                    rankChangeScore: currentRanking.rankChangeScore
-                }
+    const rankingTableUpdateFinish = async (tx) => {
+        // ranking Table에 순위와 순위 변동을 기록
+        await Promise.all(
+            currentRankings.map(async (currentRanking) => {
+                await prisma.ranking.update({
+                    where: {
+                        userId: currentRanking.userId
+                    },
+                    data: {
+                        rank: currentRanking.rank,
+                        rankChangeScore: currentRanking.rankChangeScore
+                    }
+                })
             })
-        })
-    );
-    
+        );
+    };
+    await executeTransaction(rankingTableUpdateFinish);
+
     // 현재 시점 순위 변동 저장
     previousRankings = currentRankings;
+}
+
+rankingRouter.get('/Ranking/Check', async (req, res, next) => {
+    // rankingScore 컬럼을 기준으로 내림차순한 전체 데이터 값들을 가져옴
+    const currentRankings = await prisma.ranking.findMany({
+        orderBy: {
+            rankingScore: 'desc'
+        }
+    });
 
     // 순위 변동 결과 반환
     return res.status(200).json({ currentRankings });
