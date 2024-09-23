@@ -48,14 +48,14 @@ router.post('/Pick-up', authMiddleware, async (req, res, next) => {
   const randomId = Math.ceil(Math.random() * characterDB.length);
 
   // 선수 뽑기
-  await prisma.inventory.create({
+  const player = await prisma.inventory.create({
     data: {
       userId: userId,
       characterDBId: randomId,
     },
   });
   
-  return res.status(200).json({message: `선수[${characterDB[randomId - 1].name}] 뽑기에 성공했습니다.`});
+  return res.status(200).json( player );
 });
 
 export default router;
