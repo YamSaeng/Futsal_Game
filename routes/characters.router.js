@@ -7,7 +7,7 @@ const CharactersRouter = express.Router();
 CharactersRouter.get('/Character/Check', async (req, res, next) => {
   try {
     const Check = await prisma.characterDB.findMany();
-    return res.status(200).json({ Character_info: Check });
+    return res.status(200).json({ ...Check });
   } catch (error) {
     res.status(500).json({ error: '선수 목록 조회에 실패했어요' });
     console.log(error);
@@ -31,7 +31,7 @@ CharactersRouter.get(
         return;
       }
 
-      res.status(200).json({ Character_info: findCharacter });
+      res.status(200).json({ ...findCharacter });
     } catch (error) {
       res.status(500).json({ error: '선수 조회에 실패했어요' });
       console.log(error);
