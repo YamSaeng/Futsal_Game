@@ -19,7 +19,7 @@ model Users {
   nickname String @map("nickname")
   id String @unique @map("id")
   password String @map("password")
-  cash Int @default(0) @map("cash")
+  cash Int @default(5000) @map("cash")
   
   ranking Ranking?
   squad Squad?
