@@ -69,4 +69,51 @@ router.post('/Pick-up', authMiddleware, async (req, res, next) => {
   return res.status(200).json(player);
 });
 
+// 캐시 뽑기 11연뽑
+router.post('/Pick-up/All-at-once', authMiddleware, async(req, res, next) => {
+  const userId = req.body.userId;
+  const cash = req.body.cash;
+  const pickUpCount = 11;
+  // 캐시 확인
+  if (cash < 10000) {
+    return res
+      .status(400)
+      .json({ message: '캐시가 부족합니다. (1200원 이상 필요합니다.)' });
+  }
+
+  // CharacterDB에 저장된 선수카드 갯수
+  const characterDB = await prisma.characterDB.findMany();
+
+  // 랜덤번호 배열에 담기
+  let randomId = [];
+  for(let i =0; i< pickUpCount; i++){
+    randomId.push(Math.ceil(Math.random() * characterDB.length));
+  }  
+  
+  const pickUp = async (tx) => {
+    // 캐시 차감
+    const cash = await tx.users.update({
+      where: { userId: userId },
+      data: {
+        cash: req.user.cash - 10000,
+      },
+    });
+    // N회 선수 뽑기
+    let characterInfo = [];
+    for(let i = 0; i < pickUpCount; i++){
+      const character = await tx.inventory.create({
+        data: {
+          userId: userId,
+          characterDBId: randomId[i],
+        },
+      });
+      characterInfo.push(character);
+    }    
+    // 뽑은 선수 정보 반환
+    return characterInfo;
+  };
+  await executeTransaction(pickUp);
+  return res.status(200).json(...characterInfo);
+});
+
 export default router;
