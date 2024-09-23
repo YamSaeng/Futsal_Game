@@ -71,14 +71,14 @@ router.post('/Pick-up', authMiddleware, async (req, res, next) => {
 
 // 캐시 뽑기 11연뽑
 router.post('/Pick-up/All-at-once', authMiddleware, async(req, res, next) => {
-  const userId = req.body.userId;
-  const cash = req.body.cash;
+  const userId = req.user.userId;
+  const cash = req.user.cash;
   const pickUpCount = 11;
   // 캐시 확인
   if (cash < 10000) {
     return res
       .status(400)
-      .json({ message: '캐시가 부족합니다. (1200원 이상 필요합니다.)' });
+      .json({ message: '캐시가 부족합니다. (10000원 이상 필요합니다.)' });
   }
 
   // CharacterDB에 저장된 선수카드 갯수
@@ -90,6 +90,7 @@ router.post('/Pick-up/All-at-once', authMiddleware, async(req, res, next) => {
     randomId.push(Math.ceil(Math.random() * characterDB.length));
   }  
   
+  let characterInfo = [];  
   const pickUp = async (tx) => {
     // 캐시 차감
     const cash = await tx.users.update({
@@ -99,7 +100,6 @@ router.post('/Pick-up/All-at-once', authMiddleware, async(req, res, next) => {
       },
     });
     // N회 선수 뽑기
-    let characterInfo = [];
     for(let i = 0; i < pickUpCount; i++){
       const character = await tx.inventory.create({
         data: {
@@ -113,7 +113,7 @@ router.post('/Pick-up/All-at-once', authMiddleware, async(req, res, next) => {
     return characterInfo;
   };
   await executeTransaction(pickUp);
-  return res.status(200).json(...characterInfo);
+  return res.status(200).json({...characterInfo});
 });
 
 export default router;
