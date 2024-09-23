@@ -57,7 +57,7 @@ export async function DBRankingChangeScore() {
     previousRankings = currentRankings;
 }
 
-rankingRouter.get('/Ranking/Check', async (req, res, next) => {
+rankingRouter.get('/Ranking/AllCheck', async (req, res, next) => {
     // rankingScore 컬럼을 기준으로 내림차순한 전체 데이터 값들을 가져옴
     const currentRankings = await prisma.ranking.findMany({
         orderBy: {
@@ -69,7 +69,7 @@ rankingRouter.get('/Ranking/Check', async (req, res, next) => {
     return res.status(200).json({ ... currentRankings });
 });
 
-rankingRouter.get('/Ranking/Check/:userId', async (req, res, next) => {
+rankingRouter.get('/Ranking/SingleCheck/:userId', async (req, res, next) => {
     const { userId } = req.params;
 
     const userRanking = await prisma.ranking.findFirst({
