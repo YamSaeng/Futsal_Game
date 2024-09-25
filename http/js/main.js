@@ -109,7 +109,7 @@ document
     const result = await response.json();
     if (response.ok) {
       document.getElementById('result-container').innerHTML = '';
-      createResultBox2(result);
+      await createResultBox2(result);
     } else {
       alert(result.errormessage);
       window.location.href = '/Main';
@@ -127,7 +127,7 @@ document.getElementById('ratinggame').addEventListener('click', async () => {
   const result = await response.json();
   if (response.ok) {
     document.getElementById('result-container').innerHTML = '';
-    createResultBox2(result);
+    await createResultBox2(result);
   } else {
     alert(result.errormessage);
     window.location.href = '/Main';
@@ -238,7 +238,7 @@ document
         createResultBox(result[key]);
       }
     } else {
-      alert(result.message);
+      alert(result.error);
       window.location.href = '/Main';
     }
   });

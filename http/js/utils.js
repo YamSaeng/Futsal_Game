@@ -1,3 +1,5 @@
+const delay = (delaytime) => new Promise((a) => setTimeout(a, delaytime));
+
 //캐릭터카드 생성 함수
 function createResultBox(characterInfo) {
   const result_container = document.getElementById('result-container');
@@ -23,7 +25,7 @@ function createResultBox(characterInfo) {
 }
 
 //텍스트결과 생성 함수
-function createResultBox2(result) {
+async function createResultBox2(result) {
   const result_container = document.getElementById('result-container');
 
   const box = document.createElement('div');
@@ -35,7 +37,8 @@ function createResultBox2(result) {
     textp.textContent = text;
 
     box.appendChild(textp);
-  }
+    result_container.appendChild(box);
 
-  result_container.appendChild(box);
+    await delay(1000);
+  }
 }
