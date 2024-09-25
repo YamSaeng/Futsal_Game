@@ -64,6 +64,10 @@ router.get('/Inventory/Check/:userId', async (req, res, next) => {
   //url에서 유저 아이디 받아오기
   const { userId } = req.params;
 
+  if (!userId) {
+    return res.status(404).json({ error: '해당 유저를 찾을 수 없습니다.' });
+  }
+
   //유저 아이디로 인벤토리 찾기
   const inventory = await prisma.inventory.findMany({
     where: { userId: +userId },
