@@ -238,7 +238,7 @@ document
         createResultBox(result[key]);
       }
     } else {
-      alert(result.message);
+      alert(result.error);
       window.location.href = '/Main';
     }
   });
