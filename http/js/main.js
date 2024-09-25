@@ -16,7 +16,7 @@ document.getElementById('inventory').addEventListener('click', async () => {
       createResultBox(result[key]);
     }
   } else {
-    alert(result.message);
+    alert(result.error);
     window.location.href = '/Main';
   }
 });
